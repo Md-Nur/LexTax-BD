@@ -1,6 +1,6 @@
 import { View, Text, FlatList, TouchableOpacity, RefreshControl, ActivityIndicator, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo, memo } from 'react';
 import { FileText, ChevronRight, BookmarkX } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
@@ -10,6 +10,28 @@ import { LegalDocument } from '../../src/types';
 import { useTheme } from '../../src/context/ThemeContext';
 
 const BOOKMARKS_KEY = 'lextax_bookmarks';
+
+const BookmarkItem = memo(({ item, onPress, colors, styles }: { item: LegalDocument; onPress: (id: string) => void; colors: any; styles: any }) => (
+  <TouchableOpacity
+    onPress={() => onPress(item.id)}
+    style={styles.card}
+  >
+    <View style={styles.iconContainer}>
+      <FileText size={24} color={colors.primary} />
+    </View>
+    <View style={styles.cardContent}>
+      <Text style={styles.cardTitle} numberOfLines={2}>
+        {item.title}
+      </Text>
+      <View style={styles.cardMeta}>
+        <Text style={styles.typeBadge}>{item.type}</Text>
+        <Text style={styles.yearText}>Year: {item.year}</Text>
+      </View>
+      <Text style={styles.branchText}>{item.branch}</Text>
+    </View>
+    <ChevronRight size={20} color={colors.textTertiary} />
+  </TouchableOpacity>
+));
 
 export default function BookmarksScreen() {
   const router = useRouter();
@@ -49,29 +71,20 @@ export default function BookmarksScreen() {
     }, [loadBookmarks])
   );
 
-  const styles = createStyles(colors);
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
-  const renderItem = ({ item }: { item: LegalDocument }) => (
-    <TouchableOpacity
-      onPress={() => router.push(`/document/${item.id}` as any)}
-      style={styles.card}
-    >
-      <View style={styles.iconContainer}>
-        <FileText size={24} color={colors.primary} />
-      </View>
-      <View style={styles.cardContent}>
-        <Text style={styles.cardTitle} numberOfLines={2}>
-          {item.title}
-        </Text>
-        <View style={styles.cardMeta}>
-          <Text style={styles.typeBadge}>{item.type}</Text>
-          <Text style={styles.yearText}>Year: {item.year}</Text>
-        </View>
-        <Text style={styles.branchText}>{item.branch}</Text>
-      </View>
-      <ChevronRight size={20} color={colors.textTertiary} />
-    </TouchableOpacity>
-  );
+  const handlePress = useCallback((id: string) => {
+    router.push(`/document/${id}` as any);
+  }, [router]);
+
+  const renderItem = useCallback(({ item }: { item: LegalDocument }) => (
+    <BookmarkItem 
+      item={item} 
+      onPress={handlePress} 
+      colors={colors} 
+      styles={styles} 
+    />
+  ), [handlePress, colors, styles]);
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
@@ -85,6 +98,13 @@ export default function BookmarksScreen() {
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
           contentContainerStyle={docs.length === 0 ? styles.emptyList : styles.listContent}
+          removeClippedSubviews={true}
+          initialNumToRender={10}
+          maxToRenderPerBatch={10}
+          windowSize={10}
+          getItemLayout={(_, index) => (
+            { length: 110, offset: 110 * index, index }
+          )}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <BookmarkX size={64} color={colors.textTertiary} />

@@ -1,6 +1,6 @@
 import { View, Text, FlatList, TextInput, TouchableOpacity, RefreshControl, ActivityIndicator, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback, memo } from 'react';
 import { Search, FileText, ChevronRight } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useTaxDocs } from '../hooks/useTaxDocs';
@@ -10,6 +10,31 @@ import { useTheme } from '../context/ThemeContext';
 interface LegalScreenProps {
   branch: Branch;
 }
+
+const categories: HierarchyCategory[] = ['Primary Laws', 'Delegated', 'Administrative'];
+
+const DocItem = memo(({ item, onPress, colors, styles }: { item: any; onPress: (id: string) => void; colors: any; styles: any }) => (
+  <TouchableOpacity
+    onPress={() => onPress(item.id)}
+    style={styles.card}
+  >
+    <View style={styles.iconContainer}>
+      <FileText size={24} color={colors.primary} />
+    </View>
+    <View style={styles.cardContent}>
+      <Text style={styles.cardTitle} numberOfLines={2}>
+        {item.title}
+      </Text>
+      <View style={styles.cardMeta}>
+        <Text style={styles.typeBadge}>
+          {item.type}
+        </Text>
+        <Text style={styles.yearText}>Year: {item.year}</Text>
+      </View>
+    </View>
+    <ChevronRight size={20} color={colors.textTertiary} />
+  </TouchableOpacity>
+));
 
 export const LegalScreen = ({ branch }: LegalScreenProps) => {
   const router = useRouter();
@@ -21,32 +46,20 @@ export const LegalScreen = ({ branch }: LegalScreenProps) => {
   
   const { data, isLoading, refetch } = useTaxDocs(branch, selectedTypes, searchQuery);
 
-  const styles = createStyles(colors);
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
-  const renderItem = ({ item }: { item: any }) => (
-    <TouchableOpacity
-      onPress={() => router.push(`/document/${item.id}` as any)}
-      style={styles.card}
-    >
-      <View style={styles.iconContainer}>
-        <FileText size={24} color={colors.primary} />
-      </View>
-      <View style={styles.cardContent}>
-        <Text style={styles.cardTitle} numberOfLines={2}>
-          {item.title}
-        </Text>
-        <View style={styles.cardMeta}>
-          <Text style={styles.typeBadge}>
-            {item.type}
-          </Text>
-          <Text style={styles.yearText}>Year: {item.year}</Text>
-        </View>
-      </View>
-      <ChevronRight size={20} color={colors.textTertiary} />
-    </TouchableOpacity>
-  );
+  const handlePress = useCallback((id: string) => {
+    router.push(`/document/${id}` as any);
+  }, [router]);
 
-  const categories: HierarchyCategory[] = ['Primary Laws', 'Delegated', 'Administrative'];
+  const renderItem = useCallback(({ item }: { item: any }) => (
+    <DocItem 
+      item={item} 
+      onPress={handlePress} 
+      colors={colors} 
+      styles={styles} 
+    />
+  ), [handlePress, colors, styles]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -91,6 +104,13 @@ export const LegalScreen = ({ branch }: LegalScreenProps) => {
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
+        removeClippedSubviews={true}
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={10}
+        getItemLayout={(_, index) => (
+          { length: 94, offset: 94 * index, index }
+        )}
         ListEmptyComponent={
           !isLoading ? (
             <View style={styles.emptyContainer}>

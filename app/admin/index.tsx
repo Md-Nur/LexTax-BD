@@ -1,6 +1,6 @@
 import { View, Text, FlatList, TouchableOpacity, Alert, ActivityIndicator, RefreshControl, StyleSheet, TextInput, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, memo } from 'react';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Users, FileText, Shield, ShieldOff, Pencil, Trash2, Plus, ArrowLeft, Search, X } from 'lucide-react-native';
@@ -12,6 +12,83 @@ import { Profile, LegalDocument } from '../../src/types';
 import { theme } from '../../src/theme';
 
 type Tab = 'users' | 'documents';
+
+const UserItem = memo(({ item, onToggleRole, currentProfileId, styles }: { item: Profile; onToggleRole: (user: Profile) => void; currentProfileId?: string; styles: any }) => (
+  <View style={styles.userCard}>
+    <View style={styles.userContent}>
+      <Text style={styles.userEmail} numberOfLines={1}>
+        {item.email}
+      </Text>
+      <View style={styles.userTagRow}>
+        <View
+          style={[
+            styles.roleBadge,
+            item.role === 'admin' ? styles.adminBadge : styles.userBadge
+          ]}
+        >
+          <Text
+            style={[
+              styles.roleText,
+              item.role === 'admin' ? styles.adminText : styles.userText
+            ]}
+          >
+            {item.role.toUpperCase()}
+          </Text>
+        </View>
+        {item.id === currentProfileId && (
+          <Text style={styles.selfTag}>You</Text>
+        )}
+      </View>
+    </View>
+    {item.id !== currentProfileId && (
+      <TouchableOpacity
+        onPress={() => onToggleRole(item)}
+        style={[
+          styles.actionButton,
+          item.role === 'admin' ? styles.demoteButton : styles.promoteButton
+        ]}
+      >
+        {item.role === 'admin' ? (
+          <ShieldOff size={20} color={theme.colors.error} />
+        ) : (
+          <Shield size={20} color={theme.colors.primary} />
+        )}
+      </TouchableOpacity>
+    )}
+  </View>
+));
+
+const AdminDocItem = memo(({ item, onEdit, onDelete, styles }: { item: LegalDocument; onEdit: (id: string) => void; onDelete: (id: string, title: string) => void; styles: any }) => (
+  <View style={styles.docCard}>
+    <View style={styles.docHeader}>
+      <View style={styles.docContent}>
+        <Text style={styles.docTitle} numberOfLines={2}>
+          {item.title}
+        </Text>
+        <View style={styles.docMeta}>
+          <Text style={styles.branchBadge}>
+            {item.branch}
+          </Text>
+          <Text style={styles.docInfo}>{item.type} • {item.year}</Text>
+        </View>
+      </View>
+      <View style={styles.docActions}>
+        <TouchableOpacity
+          onPress={() => onEdit(item.id)}
+          style={styles.editButton}
+        >
+          <Pencil size={18} color="#2563eb" />
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => onDelete(item.id, item.title)}
+          style={styles.deleteButton}
+        >
+          <Trash2 size={18} color={theme.colors.error} />
+        </TouchableOpacity>
+      </View>
+    </View>
+  </View>
+));
 
 export default function AdminPanel() {
   const { colors, isDarkMode } = useTheme();
@@ -133,84 +210,37 @@ export default function AdminPanel() {
     ]);
   };
 
-  const renderUserItem = ({ item }: { item: Profile }) => (
-    <View style={styles.userCard}>
-      <View style={styles.userContent}>
-        <Text style={styles.userEmail} numberOfLines={1}>
-          {item.email}
-        </Text>
-        <View style={styles.userTagRow}>
-          <View
-            style={[
-              styles.roleBadge,
-              item.role === 'admin' ? styles.adminBadge : styles.userBadge
-            ]}
-          >
-            <Text
-              style={[
-                styles.roleText,
-                item.role === 'admin' ? styles.adminText : styles.userText
-              ]}
-            >
-              {item.role.toUpperCase()}
-            </Text>
-          </View>
-          {item.id === currentProfile?.id && (
-            <Text style={styles.selfTag}>You</Text>
-          )}
-        </View>
-      </View>
-      {item.id !== currentProfile?.id && (
-        <TouchableOpacity
-          onPress={() => toggleRole(item)}
-          style={[
-            styles.actionButton,
-            item.role === 'admin' ? styles.demoteButton : styles.promoteButton
-          ]}
-        >
-          {item.role === 'admin' ? (
-            <ShieldOff size={20} color={theme.colors.error} />
-          ) : (
-            <Shield size={20} color={theme.colors.primary} />
-          )}
-        </TouchableOpacity>
-      )}
-    </View>
-  );
+  const styles = useMemo(() => getStyles(colors, isDarkMode), [colors, isDarkMode]);
 
-  const styles = getStyles(colors, isDarkMode);
+  const handleToggleRole = useCallback((user: Profile) => {
+    toggleRole(user);
+  }, [toggleRole]);
 
-  const renderDocItem = ({ item }: { item: LegalDocument }) => (
-    <View style={styles.docCard}>
-      <View style={styles.docHeader}>
-        <View style={styles.docContent}>
-          <Text style={styles.docTitle} numberOfLines={2}>
-            {item.title}
-          </Text>
-          <View style={styles.docMeta}>
-            <Text style={styles.branchBadge}>
-              {item.branch}
-            </Text>
-            <Text style={styles.docInfo}>{item.type} • {item.year}</Text>
-          </View>
-        </View>
-        <View style={styles.docActions}>
-          <TouchableOpacity
-            onPress={() => router.push(`/admin/document-form?id=${item.id}` as any)}
-            style={styles.editButton}
-          >
-            <Pencil size={18} color="#2563eb" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => deleteDocument(item.id, item.title)}
-            style={styles.deleteButton}
-          >
-            <Trash2 size={18} color={theme.colors.error} />
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
-  );
+  const handleEditDoc = useCallback((id: string) => {
+    router.push(`/admin/document-form?id=${id}` as any);
+  }, [router]);
+
+  const handleDeleteDoc = useCallback((id: string, title: string) => {
+    deleteDocument(id, title);
+  }, [deleteDocument]);
+
+  const renderUserItem = useCallback(({ item }: { item: Profile }) => (
+    <UserItem 
+      item={item} 
+      onToggleRole={handleToggleRole} 
+      currentProfileId={currentProfile?.id} 
+      styles={styles} 
+    />
+  ), [handleToggleRole, currentProfile?.id, styles]);
+
+  const renderDocItem = useCallback(({ item }: { item: LegalDocument }) => (
+    <AdminDocItem 
+      item={item} 
+      onEdit={handleEditDoc} 
+      onDelete={handleDeleteDoc} 
+      styles={styles} 
+    />
+  ), [handleEditDoc, handleDeleteDoc, styles]);
 
   if (loading) {
     return (
@@ -281,6 +311,13 @@ export default function AdminPanel() {
           renderItem={renderUserItem}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContainer}
+          removeClippedSubviews={true}
+          initialNumToRender={10}
+          maxToRenderPerBatch={10}
+          windowSize={10}
+          getItemLayout={(_, index) => (
+            { length: 82, offset: 82 * index, index }
+          )}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
           ListEmptyComponent={
             <View style={styles.emptyState}>
@@ -371,6 +408,13 @@ export default function AdminPanel() {
             renderItem={renderDocItem}
             keyExtractor={(item) => item.id}
             contentContainerStyle={[styles.listContainer, { paddingBottom: 80 }]}
+            removeClippedSubviews={true}
+            initialNumToRender={10}
+            maxToRenderPerBatch={10}
+            windowSize={10}
+            getItemLayout={(_, index) => (
+              { length: 104, offset: 104 * index, index }
+            )}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
             ListEmptyComponent={
               <View style={styles.emptyState}>
