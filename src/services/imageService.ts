@@ -2,11 +2,11 @@
  * Service for uploading images to imgbb
  */
 
-const IMGBB_API_KEY = process.env.IMGBB_API || '';
+const IMGBB_API_KEY = process.env.EXPO_PUBLIC_IMGBB_API_KEY || '';
 
 export const uploadToImgBB = async (uri: string): Promise<string> => {
   if (!IMGBB_API_KEY) {
-    throw new Error('imgbb API key is missing');
+    throw new Error('imgbb API key is missing (EXPO_PUBLIC_IMGBB_API_KEY)');
   }
 
   const formData = new FormData();
