@@ -13,7 +13,7 @@ import { theme } from '../../src/theme';
 
 type Tab = 'users' | 'documents';
 
-const UserItem = memo(({ item, onToggleRole, currentProfileId, styles }: { item: Profile; onToggleRole: (user: Profile) => void; currentProfileId?: string; styles: any }) => (
+const UserItem = memo(({ item, onToggleRole, currentProfileId, styles, colors }: { item: Profile; onToggleRole: (user: Profile) => void; currentProfileId?: string; styles: any; colors: any }) => (
   <View style={styles.userCard}>
     <View style={styles.userContent}>
       <Text style={styles.userEmail} numberOfLines={1}>
@@ -49,9 +49,9 @@ const UserItem = memo(({ item, onToggleRole, currentProfileId, styles }: { item:
         ]}
       >
         {item.role === 'admin' ? (
-          <ShieldOff size={20} color={theme.colors.error} />
+          <ShieldOff size={20} color={colors.error} />
         ) : (
-          <Shield size={20} color={theme.colors.primary} />
+          <Shield size={20} color={colors.primary} />
         )}
       </TouchableOpacity>
     )}
@@ -230,6 +230,7 @@ export default function AdminPanel() {
       onToggleRole={handleToggleRole} 
       currentProfileId={currentProfile?.id} 
       styles={styles} 
+      colors={colors}
     />
   ), [handleToggleRole, currentProfile?.id, styles]);
 
@@ -537,10 +538,10 @@ const getStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
     borderRadius: theme.borderRadius.sm,
   },
   adminBadge: {
-    backgroundColor: isDarkMode ? colors.surfaceSecondary : '#fef3c7', // amber-100 logic
+    backgroundColor: isDarkMode ? 'rgba(212, 175, 55, 0.15)' : '#fef3c7', // Gold-ish in dark, amber-100 in light
   },
   userBadge: {
-    backgroundColor: colors.surfaceSecondary,
+    backgroundColor: isDarkMode ? 'rgba(107, 114, 128, 0.2)' : colors.surfaceSecondary,
   },
   roleText: {
     fontSize: 10,
@@ -563,10 +564,14 @@ const getStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
     borderRadius: theme.borderRadius.md,
   },
   demoteButton: {
-    backgroundColor: colors.errorLight,
+    backgroundColor: isDarkMode ? 'rgba(248, 113, 113, 0.15)' : colors.errorLight,
+    borderWidth: isDarkMode ? 1 : 0,
+    borderColor: 'rgba(248, 113, 113, 0.3)',
   },
   promoteButton: {
-    backgroundColor: colors.primaryLight,
+    backgroundColor: isDarkMode ? 'rgba(52, 211, 153, 0.15)' : colors.primaryLight,
+    borderWidth: isDarkMode ? 1 : 0,
+    borderColor: 'rgba(52, 211, 153, 0.3)',
   },
   docCard: {
     backgroundColor: colors.surface,
