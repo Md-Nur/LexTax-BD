@@ -1,0 +1,1 @@
+-- We can't easily run SQL without a PSQL client, but let's check logs if possible

@@ -1,0 +1,504 @@
+import { View, Text, FlatList, TouchableOpacity, Alert, ActivityIndicator, RefreshControl, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useEffect, useState, useCallback } from 'react';
+import { useRouter } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import { Users, FileText, Shield, ShieldOff, Pencil, Trash2, Plus, ArrowLeft } from 'lucide-react-native';
+import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from '../../src/lib/supabase';
+import { useAuth } from '../../src/context/AuthContext';
+import { Profile, LegalDocument } from '../../src/types';
+import { theme } from '../../src/theme';
+
+type Tab = 'users' | 'documents';
+
+export default function AdminPanel() {
+  const queryClient = useQueryClient();
+  const router = useRouter();
+  const { profile: currentProfile, isAdmin } = useAuth();
+  const [activeTab, setActiveTab] = useState<Tab>('users');
+  const [users, setUsers] = useState<Profile[]>([]);
+  const [documents, setDocuments] = useState<LegalDocument[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    if (!isAdmin) {
+      router.replace('/(tabs)/income-tax' as any);
+      return;
+    }
+    fetchData();
+  }, [isAdmin]);
+
+  const fetchData = async () => {
+    setLoading(true);
+    await Promise.all([fetchUsers(), fetchDocuments()]);
+    setLoading(false);
+  };
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await Promise.all([fetchUsers(), fetchDocuments()]);
+    setRefreshing(false);
+  }, []);
+
+  const fetchUsers = async () => {
+    const { data, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: true });
+    if (!error && data) setUsers(data as Profile[]);
+  };
+
+  const fetchDocuments = async () => {
+    const { data, error } = await supabase
+      .from('legal_documents')
+      .select('*')
+      .order('updated_at', { ascending: false });
+    if (!error && data) setDocuments(data as LegalDocument[]);
+  };
+
+  const toggleRole = async (user: Profile) => {
+    if (user.id === currentProfile?.id) {
+      Alert.alert('Error', 'You cannot change your own role.');
+      return;
+    }
+    const newRole = user.role === 'admin' ? 'user' : 'admin';
+    Alert.alert(
+      'Confirm Role Change',
+      `Make ${user.email} ${newRole === 'admin' ? 'an Admin' : 'a regular User'}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Confirm',
+          onPress: async () => {
+            const { error } = await supabase
+              .from('profiles')
+              .update({ role: newRole })
+              .eq('id', user.id);
+            if (error) {
+              Alert.alert('Error', error.message);
+            } else {
+              fetchUsers();
+              queryClient.invalidateQueries({ queryKey: ['legal-docs'] });
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const deleteDocument = (docId: string, title: string) => {
+    Alert.alert('Delete Document', `Are you sure you want to delete "${title}"?`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          const { error } = await supabase.from('legal_documents').delete().eq('id', docId);
+          if (error) {
+            Alert.alert('Error', error.message);
+          } else {
+            fetchDocuments();
+            queryClient.invalidateQueries({ queryKey: ['legal-docs'] });
+          }
+        },
+      },
+    ]);
+  };
+
+  const renderUserItem = ({ item }: { item: Profile }) => (
+    <View style={styles.userCard}>
+      <View style={styles.userContent}>
+        <Text style={styles.userEmail} numberOfLines={1}>
+          {item.email}
+        </Text>
+        <View style={styles.userTagRow}>
+          <View
+            style={[
+              styles.roleBadge,
+              item.role === 'admin' ? styles.adminBadge : styles.userBadge
+            ]}
+          >
+            <Text
+              style={[
+                styles.roleText,
+                item.role === 'admin' ? styles.adminText : styles.userText
+              ]}
+            >
+              {item.role.toUpperCase()}
+            </Text>
+          </View>
+          {item.id === currentProfile?.id && (
+            <Text style={styles.selfTag}>You</Text>
+          )}
+        </View>
+      </View>
+      {item.id !== currentProfile?.id && (
+        <TouchableOpacity
+          onPress={() => toggleRole(item)}
+          style={[
+            styles.actionButton,
+            item.role === 'admin' ? styles.demoteButton : styles.promoteButton
+          ]}
+        >
+          {item.role === 'admin' ? (
+            <ShieldOff size={20} color={theme.colors.error} />
+          ) : (
+            <Shield size={20} color={theme.colors.primary} />
+          )}
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+
+  const renderDocItem = ({ item }: { item: LegalDocument }) => (
+    <View style={styles.docCard}>
+      <View style={styles.docHeader}>
+        <View style={styles.docContent}>
+          <Text style={styles.docTitle} numberOfLines={2}>
+            {item.title}
+          </Text>
+          <View style={styles.docMeta}>
+            <Text style={styles.branchBadge}>
+              {item.branch}
+            </Text>
+            <Text style={styles.docInfo}>{item.type} • {item.year}</Text>
+          </View>
+        </View>
+        <View style={styles.docActions}>
+          <TouchableOpacity
+            onPress={() => router.push(`/admin/document-form?id=${item.id}` as any)}
+            style={styles.editButton}
+          >
+            <Pencil size={18} color="#2563eb" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => deleteDocument(item.id, item.title)}
+            style={styles.deleteButton}
+          >
+            <Trash2 size={18} color={theme.colors.error} />
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  );
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      <StatusBar style="light" />
+
+      {/* Header with Safe Area Background */}
+      <View style={styles.headerWrapper}>
+        <SafeAreaView edges={['top']} />
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <ArrowLeft size={24} color={theme.colors.white} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Admin Panel</Text>
+        </View>
+      </View>
+
+      {/* Tabs */}
+      <View style={styles.tabsBar}>
+        <TouchableOpacity
+          onPress={() => setActiveTab('users')}
+          style={[
+            styles.tabItem,
+            styles.tabItemLeft,
+            activeTab === 'users' ? styles.activeTab : styles.inactiveTab
+          ]}
+        >
+          <Users size={18} color={activeTab === 'users' ? theme.colors.accent : theme.colors.gray600} />
+          <Text
+            style={[
+              styles.tabLabel,
+              activeTab === 'users' ? styles.activeTabLabel : styles.inactiveTabLabel
+            ]}
+          >
+            Users ({users.length})
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => setActiveTab('documents')}
+          style={[
+            styles.tabItem,
+            activeTab === 'documents' ? styles.activeTab : styles.inactiveTab
+          ]}
+        >
+          <FileText size={18} color={activeTab === 'documents' ? theme.colors.accent : theme.colors.gray600} />
+          <Text
+            style={[
+              styles.tabLabel,
+              activeTab === 'documents' ? styles.activeTabLabel : styles.inactiveTabLabel
+            ]}
+          >
+            Docs ({documents.length})
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Content */}
+      {activeTab === 'users' ? (
+        <FlatList
+          data={users}
+          renderItem={renderUserItem}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContainer}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />}
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyText}>No users found</Text>
+            </View>
+          }
+        />
+      ) : (
+        <>
+          {/* Add Document FAB */}
+          <TouchableOpacity
+            onPress={() => router.push('/admin/document-form' as any)}
+            style={styles.fab}
+          >
+            <Plus size={28} color={theme.colors.primaryDark} />
+          </TouchableOpacity>
+
+          <FlatList
+            data={documents}
+            renderItem={renderDocItem}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={[styles.listContainer, { paddingBottom: 80 }]}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />}
+            ListEmptyComponent={
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyText}>No documents found</Text>
+              </View>
+            }
+          />
+        </>
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.gray50,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.gray50,
+  },
+  headerWrapper: {
+    backgroundColor: theme.colors.primary,
+  },
+  header: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  backButton: {
+    marginRight: theme.spacing.md,
+  },
+  headerTitle: {
+    color: theme.colors.white,
+    fontSize: 20,
+    fontWeight: 'bold',
+    flex: 1,
+  },
+  tabsBar: {
+    flexDirection: 'row',
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.gray200,
+  },
+  tabItem: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
+  },
+  tabItemLeft: {
+    marginRight: theme.spacing.sm,
+  },
+  activeTab: {
+    backgroundColor: theme.colors.primary,
+  },
+  inactiveTab: {
+    backgroundColor: theme.colors.gray100,
+  },
+  tabLabel: {
+    marginLeft: theme.spacing.sm,
+    fontWeight: 'bold',
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  activeTabLabel: {
+    color: theme.colors.white,
+  },
+  inactiveTabLabel: {
+    color: theme.colors.gray600,
+  },
+  listContainer: {
+    paddingTop: theme.spacing.sm,
+    paddingBottom: theme.spacing.xl,
+  },
+  userCard: {
+    backgroundColor: theme.colors.white,
+    marginHorizontal: theme.spacing.lg,
+    marginVertical: 6,
+    padding: theme.spacing.lg,
+    borderRadius: theme.borderRadius.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.gray100,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  userContent: {
+    flex: 1,
+    marginRight: theme.spacing.md,
+  },
+  userEmail: {
+    color: theme.colors.gray900,
+    fontWeight: '600',
+    fontSize: 14,
+    lineHeight: 20,
+    paddingVertical: 2,
+  },
+  userTagRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  roleBadge: {
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: 2,
+    borderRadius: theme.borderRadius.sm,
+  },
+  adminBadge: {
+    backgroundColor: '#fef3c7', // amber-100
+  },
+  userBadge: {
+    backgroundColor: theme.colors.gray100,
+  },
+  roleText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  adminText: {
+    color: '#92400e', // amber-800
+  },
+  userText: {
+    color: theme.colors.gray600,
+  },
+  selfTag: {
+    color: theme.colors.primary,
+    fontSize: 12,
+    marginLeft: theme.spacing.md,
+    fontWeight: '500',
+  },
+  actionButton: {
+    padding: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
+  },
+  demoteButton: {
+    backgroundColor: theme.colors.errorLight,
+  },
+  promoteButton: {
+    backgroundColor: theme.colors.primaryLight,
+  },
+  docCard: {
+    backgroundColor: theme.colors.white,
+    marginHorizontal: theme.spacing.lg,
+    marginVertical: 6,
+    padding: theme.spacing.lg,
+    borderRadius: theme.borderRadius.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.gray100,
+  },
+  docHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+  },
+  docContent: {
+    flex: 1,
+    marginRight: theme.spacing.md,
+  },
+  docTitle: {
+    color: theme.colors.gray900,
+    fontWeight: '600',
+    fontSize: 14,
+    lineHeight: 20,
+    paddingTop: 2,
+  },
+  docMeta: {
+    flexDirection: 'row',
+    marginTop: 6,
+    alignItems: 'center',
+  },
+  branchBadge: {
+    color: theme.colors.primary,
+    fontWeight: '500',
+    fontSize: 10,
+    lineHeight: 14,
+    backgroundColor: theme.colors.primaryLight,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: 4,
+    borderRadius: theme.borderRadius.sm,
+  },
+  docInfo: {
+    color: theme.colors.gray500,
+    fontSize: 10,
+    lineHeight: 14,
+    marginLeft: theme.spacing.md,
+  },
+  docActions: {
+    flexDirection: 'row',
+  },
+  editButton: {
+    backgroundColor: '#eff6ff', // blue-50
+    padding: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
+    marginRight: theme.spacing.sm,
+  },
+  deleteButton: {
+    backgroundColor: theme.colors.errorLight,
+    padding: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
+  },
+  emptyState: {
+    marginTop: 80,
+    alignItems: 'center',
+  },
+  emptyText: {
+    color: theme.colors.gray500,
+    fontStyle: 'italic',
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 24,
+    right: 24,
+    zIndex: 10,
+    backgroundColor: theme.colors.accent,
+    padding: theme.spacing.lg,
+    borderRadius: theme.borderRadius.xl,
+    shadowColor: theme.colors.black,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 8,
+  },
+});
