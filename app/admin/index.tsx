@@ -7,12 +7,14 @@ import { Users, FileText, Shield, ShieldOff, Pencil, Trash2, Plus, ArrowLeft, Se
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../src/lib/supabase';
 import { useAuth } from '../../src/context/AuthContext';
+import { useTheme } from '../../src/context/ThemeContext';
 import { Profile, LegalDocument } from '../../src/types';
 import { theme } from '../../src/theme';
 
 type Tab = 'users' | 'documents';
 
 export default function AdminPanel() {
+  const { colors, isDarkMode } = useTheme();
   const queryClient = useQueryClient();
   const router = useRouter();
   const { profile: currentProfile, isAdmin } = useAuth();
@@ -176,6 +178,8 @@ export default function AdminPanel() {
     </View>
   );
 
+  const styles = getStyles(colors, isDarkMode);
+
   const renderDocItem = ({ item }: { item: LegalDocument }) => (
     <View style={styles.docCard}>
       <View style={styles.docHeader}>
@@ -211,7 +215,7 @@ export default function AdminPanel() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -225,7 +229,7 @@ export default function AdminPanel() {
         <SafeAreaView edges={['top']} />
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <ArrowLeft size={24} color={theme.colors.white} />
+            <ArrowLeft size={24} color={colors.headerText} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Admin Panel</Text>
         </View>
@@ -241,7 +245,7 @@ export default function AdminPanel() {
             activeTab === 'users' ? styles.activeTab : styles.inactiveTab
           ]}
         >
-          <Users size={18} color={activeTab === 'users' ? theme.colors.accent : theme.colors.gray600} />
+          <Users size={18} color={activeTab === 'users' ? colors.accent : colors.textTertiary} />
           <Text
             style={[
               styles.tabLabel,
@@ -258,7 +262,7 @@ export default function AdminPanel() {
             activeTab === 'documents' ? styles.activeTab : styles.inactiveTab
           ]}
         >
-          <FileText size={18} color={activeTab === 'documents' ? theme.colors.accent : theme.colors.gray600} />
+          <FileText size={18} color={activeTab === 'documents' ? colors.accent : colors.textTertiary} />
           <Text
             style={[
               styles.tabLabel,
@@ -277,7 +281,7 @@ export default function AdminPanel() {
           renderItem={renderUserItem}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContainer}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
           ListEmptyComponent={
             <View style={styles.emptyState}>
               <Text style={styles.emptyText}>No users found</Text>
@@ -291,22 +295,22 @@ export default function AdminPanel() {
             onPress={() => router.push('/admin/document-form' as any)}
             style={styles.fab}
           >
-            <Plus size={28} color={theme.colors.primaryDark} />
+            <Plus size={28} color={isDarkMode ? colors.surface : colors.primaryDark} />
           </TouchableOpacity>
 
           <View style={styles.filterContainer}>
             <View style={styles.searchBar}>
-              <Search size={20} color={theme.colors.gray400} />
+              <Search size={20} color={colors.textTertiary} />
               <TextInput
                 style={styles.searchInput}
                 placeholder="Search documents..."
                 value={searchQuery}
                 onChangeText={setSearchQuery}
-                placeholderTextColor={theme.colors.gray400}
+                placeholderTextColor={colors.textTertiary}
               />
               {searchQuery.length > 0 && (
                 <TouchableOpacity onPress={() => setSearchQuery('')}>
-                  <X size={20} color={theme.colors.gray400} />
+                  <X size={20} color={colors.textTertiary} />
                 </TouchableOpacity>
               )}
             </View>
@@ -367,7 +371,7 @@ export default function AdminPanel() {
             renderItem={renderDocItem}
             keyExtractor={(item) => item.id}
             contentContainerStyle={[styles.listContainer, { paddingBottom: 80 }]}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
             ListEmptyComponent={
               <View style={styles.emptyState}>
                 <Text style={styles.emptyText}>{searchQuery || selectedBranch || selectedType || selectedYear ? 'No matching documents found' : 'No documents found'}</Text>
@@ -385,19 +389,19 @@ export default function AdminPanel() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.gray50,
+    backgroundColor: colors.background,
   },
   loadingContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: theme.colors.gray50,
+    backgroundColor: colors.background,
   },
   headerWrapper: {
-    backgroundColor: theme.colors.primary,
+    backgroundColor: colors.headerBg,
   },
   header: {
     paddingHorizontal: theme.spacing.lg,
@@ -409,7 +413,7 @@ const styles = StyleSheet.create({
     marginRight: theme.spacing.md,
   },
   headerTitle: {
-    color: theme.colors.white,
+    color: colors.headerText,
     fontSize: 20,
     fontWeight: 'bold',
     flex: 1,
@@ -417,9 +421,9 @@ const styles = StyleSheet.create({
   tabsBar: {
     flexDirection: 'row',
     padding: theme.spacing.md,
-    backgroundColor: theme.colors.white,
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.gray200,
+    borderBottomColor: colors.border,
   },
   tabItem: {
     flex: 1,
@@ -433,10 +437,10 @@ const styles = StyleSheet.create({
     marginRight: theme.spacing.sm,
   },
   activeTab: {
-    backgroundColor: theme.colors.primary,
+    backgroundColor: colors.primary,
   },
   inactiveTab: {
-    backgroundColor: theme.colors.gray100,
+    backgroundColor: colors.surfaceSecondary,
   },
   tabLabel: {
     marginLeft: theme.spacing.sm,
@@ -445,23 +449,23 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   activeTabLabel: {
-    color: theme.colors.white,
+    color: colors.headerText,
   },
   inactiveTabLabel: {
-    color: theme.colors.gray600,
+    color: colors.textSecondary,
   },
   listContainer: {
     paddingTop: theme.spacing.sm,
     paddingBottom: theme.spacing.xl,
   },
   userCard: {
-    backgroundColor: theme.colors.white,
+    backgroundColor: colors.surface,
     marginHorizontal: theme.spacing.lg,
     marginVertical: 6,
     padding: theme.spacing.lg,
     borderRadius: theme.borderRadius.lg,
     borderWidth: 1,
-    borderColor: theme.colors.gray100,
+    borderColor: colors.borderLight,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -471,7 +475,7 @@ const styles = StyleSheet.create({
     marginRight: theme.spacing.md,
   },
   userEmail: {
-    color: theme.colors.gray900,
+    color: colors.text,
     fontWeight: '600',
     fontSize: 14,
     lineHeight: 20,
@@ -488,23 +492,23 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.sm,
   },
   adminBadge: {
-    backgroundColor: '#fef3c7', // amber-100
+    backgroundColor: isDarkMode ? colors.surfaceSecondary : '#fef3c7', // amber-100 logic
   },
   userBadge: {
-    backgroundColor: theme.colors.gray100,
+    backgroundColor: colors.surfaceSecondary,
   },
   roleText: {
     fontSize: 10,
     fontWeight: 'bold',
   },
   adminText: {
-    color: '#92400e', // amber-800
+    color: isDarkMode ? colors.accent : '#92400e', // amber-800 logic
   },
   userText: {
-    color: theme.colors.gray600,
+    color: colors.textSecondary,
   },
   selfTag: {
-    color: theme.colors.primary,
+    color: colors.primary,
     fontSize: 12,
     marginLeft: theme.spacing.md,
     fontWeight: '500',
@@ -514,19 +518,19 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.md,
   },
   demoteButton: {
-    backgroundColor: theme.colors.errorLight,
+    backgroundColor: colors.errorLight,
   },
   promoteButton: {
-    backgroundColor: theme.colors.primaryLight,
+    backgroundColor: colors.primaryLight,
   },
   docCard: {
-    backgroundColor: theme.colors.white,
+    backgroundColor: colors.surface,
     marginHorizontal: theme.spacing.lg,
     marginVertical: 6,
     padding: theme.spacing.lg,
     borderRadius: theme.borderRadius.lg,
     borderWidth: 1,
-    borderColor: theme.colors.gray100,
+    borderColor: colors.borderLight,
   },
   docHeader: {
     flexDirection: 'row',
@@ -538,7 +542,7 @@ const styles = StyleSheet.create({
     marginRight: theme.spacing.md,
   },
   docTitle: {
-    color: theme.colors.gray900,
+    color: colors.text,
     fontWeight: '600',
     fontSize: 14,
     lineHeight: 20,
@@ -550,17 +554,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   branchBadge: {
-    color: theme.colors.primary,
+    color: colors.primary,
     fontWeight: '500',
     fontSize: 10,
     lineHeight: 14,
-    backgroundColor: theme.colors.primaryLight,
+    backgroundColor: colors.primaryLight,
     paddingHorizontal: theme.spacing.md,
     paddingVertical: 4,
     borderRadius: theme.borderRadius.sm,
   },
   docInfo: {
-    color: theme.colors.gray500,
+    color: colors.textTertiary,
     fontSize: 10,
     lineHeight: 14,
     marginLeft: theme.spacing.md,
@@ -569,13 +573,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   editButton: {
-    backgroundColor: '#eff6ff', // blue-50
+    backgroundColor: isDarkMode ? colors.surfaceSecondary : '#eff6ff', // blue-50
     padding: theme.spacing.md,
     borderRadius: theme.borderRadius.md,
     marginRight: theme.spacing.sm,
   },
   deleteButton: {
-    backgroundColor: theme.colors.errorLight,
+    backgroundColor: colors.errorLight,
     padding: theme.spacing.md,
     borderRadius: theme.borderRadius.md,
   },
@@ -584,7 +588,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyText: {
-    color: theme.colors.gray500,
+    color: colors.textTertiary,
     fontStyle: 'italic',
   },
   fab: {
@@ -592,25 +596,25 @@ const styles = StyleSheet.create({
     bottom: 24,
     right: 24,
     zIndex: 10,
-    backgroundColor: theme.colors.accent,
+    backgroundColor: colors.accent,
     padding: theme.spacing.lg,
     borderRadius: theme.borderRadius.xl,
-    shadowColor: theme.colors.black,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 8,
   },
   filterContainer: {
-    backgroundColor: theme.colors.white,
+    backgroundColor: colors.surface,
     paddingBottom: theme.spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.gray200,
+    borderBottomColor: colors.border,
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.gray100,
+    backgroundColor: colors.surfaceSecondary,
     marginHorizontal: theme.spacing.lg,
     marginTop: theme.spacing.md,
     paddingHorizontal: theme.spacing.md,
@@ -620,7 +624,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     marginLeft: theme.spacing.sm,
-    color: theme.colors.gray900,
+    color: colors.text,
     fontSize: 14,
   },
   filterScroll: {
@@ -631,32 +635,32 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: 6,
     borderRadius: theme.borderRadius.full,
-    backgroundColor: theme.colors.gray100,
+    backgroundColor: colors.surfaceSecondary,
     marginRight: theme.spacing.sm,
     borderWidth: 1,
-    borderColor: theme.colors.gray200,
+    borderColor: colors.borderLight,
   },
   activeFilterChip: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary,
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   filterChipText: {
     fontSize: 12,
-    color: theme.colors.gray600,
+    color: colors.textSecondary,
     fontWeight: '500',
   },
   activeFilterChipText: {
-    color: theme.colors.white,
+    color: colors.headerText,
   },
   clearButton: {
     marginTop: theme.spacing.md,
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.sm,
     borderRadius: theme.borderRadius.md,
-    backgroundColor: theme.colors.gray100,
+    backgroundColor: colors.surfaceSecondary,
   },
   clearButtonText: {
-    color: theme.colors.primary,
+    color: colors.primary,
     fontSize: 14,
     fontWeight: '600',
   },
