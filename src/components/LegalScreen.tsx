@@ -104,10 +104,10 @@ export const LegalScreen = ({ branch }: LegalScreenProps) => {
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
+        windowSize={5}
+        maxToRenderPerBatch={5}
+        updateCellsBatchingPeriod={30}
         removeClippedSubviews={true}
-        initialNumToRender={10}
-        maxToRenderPerBatch={10}
-        windowSize={10}
         getItemLayout={(_, index) => (
           { length: 94, offset: 94 * index, index }
         )}
@@ -199,9 +199,10 @@ const createStyles = (colors: any) =>
     card: {
       backgroundColor: colors.cardBg,
       marginHorizontal: 16,
-      marginVertical: 8,
+      marginVertical: 8, // 16px total vertical margin
       padding: 16,
       borderRadius: 12,
+      height: 78, // Fixed height (110 total including margins)
       flexDirection: 'row',
       alignItems: 'center',
       shadowColor: '#000',

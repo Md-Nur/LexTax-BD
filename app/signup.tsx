@@ -137,7 +137,7 @@ export default function SignupScreen() {
             style={styles.signupButton}
           >
             {loading ? (
-              <ActivityIndicator color={theme.colors.white} />
+              <ActivityIndicator color="#022c22" />
             ) : (
               <Text style={styles.signupButtonText}>Create Account</Text>
             )}

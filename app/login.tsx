@@ -106,7 +106,7 @@ export default function LoginScreen() {
             style={styles.loginButton}
           >
             {loading ? (
-              <ActivityIndicator color={theme.colors.white} />
+              <ActivityIndicator color="#022c22" />
             ) : (
               <Text style={styles.loginButtonText}>Sign In</Text>
             )}

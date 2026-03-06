@@ -313,8 +313,8 @@ export default function AdminPanel() {
           contentContainerStyle={styles.listContainer}
           removeClippedSubviews={true}
           initialNumToRender={10}
-          maxToRenderPerBatch={10}
-          windowSize={10}
+          maxToRenderPerBatch={5}
+          windowSize={5}
           getItemLayout={(_, index) => (
             { length: 82, offset: 82 * index, index }
           )}
@@ -410,10 +410,10 @@ export default function AdminPanel() {
             contentContainerStyle={[styles.listContainer, { paddingBottom: 80 }]}
             removeClippedSubviews={true}
             initialNumToRender={10}
-            maxToRenderPerBatch={10}
-            windowSize={10}
+            maxToRenderPerBatch={5}
+            windowSize={5}
             getItemLayout={(_, index) => (
-              { length: 104, offset: 104 * index, index }
+              { length: 110, offset: 110 * index, index }
             )}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
             ListEmptyComponent={
@@ -507,6 +507,7 @@ const getStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
     marginHorizontal: theme.spacing.lg,
     marginVertical: 6,
     padding: theme.spacing.lg,
+    height: 70, // Fixed height (82 total including margins)
     borderRadius: theme.borderRadius.lg,
     borderWidth: 1,
     borderColor: colors.borderLight,
@@ -572,6 +573,7 @@ const getStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
     marginHorizontal: theme.spacing.lg,
     marginVertical: 6,
     padding: theme.spacing.lg,
+    height: 98, // Fixed height (110 total including margins)
     borderRadius: theme.borderRadius.lg,
     borderWidth: 1,
     borderColor: colors.borderLight,
