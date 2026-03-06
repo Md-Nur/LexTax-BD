@@ -8,6 +8,9 @@ import {
   StyleSheet,
   Alert,
   Linking,
+  TextInput,
+  ActivityIndicator,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -24,20 +27,31 @@ import {
   ChevronDown,
   Mail,
   ArrowLeft,
+  Camera,
+  Check,
+  X,
 } from 'lucide-react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../src/context/AuthContext';
 import { useTheme } from '../src/context/ThemeContext';
 import { useLanguage } from '../src/context/LanguageContext';
+import { uploadToImgBB } from '../src/services/imageService';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { session, profile, isAdmin, signOut } = useAuth();
+  const { session, profile, isAdmin, signOut, updateProfile } = useAuth();
   const { isDarkMode, toggleTheme, colors } = useTheme();
   const { language, setLanguage, t } = useLanguage();
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [fullName, setFullName] = useState(profile?.full_name || '');
+  const [isSaving, setIsSaving] = useState(false);
+  const [avatarUri, setAvatarUri] = useState<string | null>(null);
 
   const userEmail = session?.user?.email || 'user@example.com';
-  const userInitials = userEmail.substring(0, 2).toUpperCase();
+  const displayName = profile?.full_name || userEmail.split('@')[0];
+  const userInitials = displayName.substring(0, 2).toUpperCase();
+  
   const memberSince = profile?.created_at
     ? new Date(profile.created_at).toLocaleDateString(language === 'bn' ? 'bn-BD' : 'en-US', {
         year: 'numeric',
@@ -45,6 +59,59 @@ export default function ProfileScreen() {
         day: 'numeric',
       })
     : '';
+
+  const handlePickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert(
+        language === 'bn' ? 'অনুমতি প্রয়োজন' : 'Permission Required',
+        language === 'bn' ? 'গ্যালারি অ্যাক্সেস করার জন্য আপনার অনুমতি প্রয়োজন।' : 'We need permission to access your gallery.'
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      setAvatarUri(result.assets[0].uri);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    setIsSaving(true);
+    try {
+      let avatarUrl = profile?.avatar_url;
+
+      if (avatarUri) {
+        avatarUrl = await uploadToImgBB(avatarUri);
+      }
+
+      const { error } = await updateProfile({
+        full_name: fullName,
+        avatar_url: avatarUrl,
+      });
+
+      if (error) {
+        Alert.alert('Error', error);
+      } else {
+        setIsEditing(false);
+        setAvatarUri(null);
+        Alert.alert(
+          language === 'bn' ? 'সফল' : 'Success',
+          language === 'bn' ? 'প্রোফাইল সফলভাবে আপডেট করা হয়েছে।' : 'Profile updated successfully.'
+        );
+      }
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to update profile');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const handleSignOut = () => {
     Alert.alert(
@@ -83,17 +150,65 @@ export default function ProfileScreen() {
             <ArrowLeft size={24} color="#fff" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{t('profile.title')}</Text>
+          {isEditing ? (
+            <View style={styles.headerActions}>
+              <TouchableOpacity onPress={() => { setIsEditing(false); setAvatarUri(null); }} style={styles.headerBtn}>
+                <X size={24} color="#fff" />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleSaveProfile} style={styles.headerBtn} disabled={isSaving}>
+                {isSaving ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Check size={24} color="#fff" />
+                )}
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity onPress={() => setIsEditing(true)} style={styles.editBtn}>
+              <Text style={styles.editBtnText}>{language === 'bn' ? 'সম্পাদন' : 'Edit'}</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* User Info Card */}
         <View style={styles.userCard}>
-          <View style={styles.avatarContainer}>
+          <TouchableOpacity 
+            style={styles.avatarContainer} 
+            onPress={isEditing ? handlePickImage : undefined}
+            disabled={!isEditing}
+          >
             <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{userInitials}</Text>
+              {avatarUri || profile?.avatar_url ? (
+                <Image 
+                  source={{ uri: avatarUri || profile?.avatar_url }} 
+                  style={styles.avatarImg} 
+                />
+              ) : (
+                <Text style={styles.avatarText}>{userInitials}</Text>
+              )}
+              {isEditing && (
+                <View style={styles.cameraIcon}>
+                  <Camera size={16} color="#fff" />
+                </View>
+              )}
             </View>
-          </View>
+          </TouchableOpacity>
+          
+          {isEditing ? (
+            <TextInput
+              style={styles.nameInput}
+              value={fullName}
+              onChangeText={setFullName}
+              placeholder={language === 'bn' ? 'পুরো নাম' : 'Full Name'}
+              placeholderTextColor="rgba(255,255,255,0.6)"
+              autoFocus
+            />
+          ) : (
+            <Text style={styles.userName}>{profile?.full_name || t('profile.role.user')}</Text>
+          )}
+          
           <Text style={styles.userEmail}>{userEmail}</Text>
           <View style={styles.roleBadge}>
             <Shield size={12} color={colors.primary} />
@@ -297,6 +412,24 @@ const createStyles = (colors: any) =>
       fontWeight: '700',
       flex: 1,
     },
+    headerActions: {
+      flexDirection: 'row',
+      gap: 16,
+    },
+    headerBtn: {
+      padding: 4,
+    },
+    editBtn: {
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 8,
+      backgroundColor: 'rgba(255,255,255,0.2)',
+    },
+    editBtnText: {
+      color: '#fff',
+      fontSize: 14,
+      fontWeight: '600',
+    },
 
     // User card
     userCard: {
@@ -317,25 +450,61 @@ const createStyles = (colors: any) =>
       marginBottom: 12,
     },
     avatar: {
-      width: 72,
-      height: 72,
-      borderRadius: 36,
+      width: 80,
+      height: 80,
+      borderRadius: 40,
       backgroundColor: 'rgba(255,255,255,0.2)',
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: 3,
       borderColor: 'rgba(255,255,255,0.4)',
+      overflow: 'hidden',
+    },
+    avatarImg: {
+      width: '100%',
+      height: '100%',
     },
     avatarText: {
       color: '#fff',
-      fontSize: 26,
+      fontSize: 28,
       fontWeight: '700',
     },
-    userEmail: {
+    cameraIcon: {
+      position: 'absolute',
+      bottom: 0,
+      right: 0,
+      backgroundColor: colors.primary,
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 2,
+      borderColor: '#fff',
+    },
+    userName: {
       color: '#fff',
-      fontSize: 16,
-      fontWeight: '600',
-      marginBottom: 8,
+      fontSize: 20,
+      fontWeight: '700',
+      marginBottom: 4,
+    },
+    nameInput: {
+      color: '#fff',
+      fontSize: 20,
+      fontWeight: '700',
+      marginBottom: 4,
+      borderBottomWidth: 1,
+      borderBottomColor: 'rgba(255,255,255,0.5)',
+      paddingVertical: 4,
+      paddingHorizontal: 8,
+      textAlign: 'center',
+      minWidth: 200,
+    },
+    userEmail: {
+      color: 'rgba(255,255,255,0.85)',
+      fontSize: 14,
+      fontWeight: '500',
+      marginBottom: 12,
     },
     roleBadge: {
       flexDirection: 'row',

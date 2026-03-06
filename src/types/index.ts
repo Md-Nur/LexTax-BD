@@ -2,6 +2,8 @@ export interface Profile {
   id: string;
   email: string;
   role: 'admin' | 'user';
+  full_name?: string;
+  avatar_url?: string;
   created_at: string;
 }
 
