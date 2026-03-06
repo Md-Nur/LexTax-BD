@@ -7,20 +7,22 @@ import {
   Share,
   Alert,
   StyleSheet,
+  Modal,
 } from "react-native";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../../src/lib/supabase";
 import { LegalDocument } from "../../src/types";
-import Markdown from "react-native-markdown-display";
+import Markdown, { ASTNode } from "react-native-markdown-display";
 import {
   Bookmark,
   Share as ShareIcon,
   ArrowLeft,
   BookmarkCheck,
+  List,
 } from "lucide-react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../../src/context/ThemeContext";
@@ -57,7 +59,18 @@ export default function DocumentDetailScreen() {
   });
 
   useEffect(() => {
-    checkBookmarkStatus();
+    const checkStatus = async () => {
+      try {
+        const bookmarks = await AsyncStorage.getItem(BOOKMARKS_KEY);
+        if (bookmarks) {
+          const parsed = JSON.parse(bookmarks);
+          setIsBookmarked(parsed.includes(id));
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    checkStatus();
   }, [id]);
 
   useEffect(() => {
@@ -66,27 +79,19 @@ export default function DocumentDetailScreen() {
       const regex = /^(#{1,6})\s+(.*)$/gm;
       let match;
       while ((match = regex.exec(doc.content)) !== null) {
+        const rawText = match[2].trim();
+        // Strip common markdown markers for the index ID match
+        const cleanText = rawText.replace(/[*_~`]/g, "");
         headings.push({
-          id: match[2].trim(), // Use text as ID for lookup
-          text: match[2].trim(),
+          id: cleanText,
+          text: cleanText,
           level: match[1].length,
         });
       }
       setToc(headings);
+      headerPositions.current = {}; // Reset positions on content change
     }
   }, [doc?.content]);
-
-  const checkBookmarkStatus = async () => {
-    try {
-      const bookmarks = await AsyncStorage.getItem(BOOKMARKS_KEY);
-      if (bookmarks) {
-        const parsed = JSON.parse(bookmarks);
-        setIsBookmarked(parsed.includes(id));
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
 
   const toggleBookmark = async () => {
     try {
@@ -99,7 +104,7 @@ export default function DocumentDetailScreen() {
       }
       await AsyncStorage.setItem(BOOKMARKS_KEY, JSON.stringify(list));
       setIsBookmarked(!isBookmarked);
-    } catch (e) {
+    } catch {
       Alert.alert("Error", "Could not update bookmark");
     }
   };
@@ -133,16 +138,24 @@ export default function DocumentDetailScreen() {
     styles: any,
     level: number,
   ) => {
-    const textNode = node.children.find((c) => c.type === "text");
-    const textContent = textNode ? textNode.content : "";
+    const getTextContent = (nodes: ASTNode[]): string => {
+      return nodes
+        .map((n) => {
+          if (n.type === "text") return n.content;
+          if (n.children && n.children.length > 0)
+            return getTextContent(n.children);
+          return n.content || "";
+        })
+        .join("");
+    };
+    const textContent = getTextContent(node.children).trim();
 
     return (
       <View
         key={node.key}
         onLayout={(event) => {
           if (textContent) {
-            headerPositions.current[textContent.trim()] =
-              event.nativeEvent.layout.y;
+            headerPositions.current[textContent] = event.nativeEvent.layout.y;
           }
         }}
       >
@@ -293,6 +306,14 @@ export default function DocumentDetailScreen() {
           <ArrowLeft color={colors.text} size={24} />
         </TouchableOpacity>
         <View style={styles.headerActions}>
+          {toc.length > 0 && (
+            <TouchableOpacity
+              onPress={() => setShowToc(true)}
+              style={styles.headerAction}
+            >
+              <List color={colors.text} size={24} />
+            </TouchableOpacity>
+          )}
           <TouchableOpacity
             onPress={toggleBookmark}
             style={styles.headerAction}
@@ -314,6 +335,7 @@ export default function DocumentDetailScreen() {
       </View>
 
       <ScrollView
+        ref={scrollViewRef}
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
       >
@@ -338,7 +360,11 @@ export default function DocumentDetailScreen() {
 
         <View style={styles.divider} />
 
-        <Markdown style={markdownStyles}>{doc.content}</Markdown>
+        <View onLayout={(event) => setMarkdownY(event.nativeEvent.layout.y)}>
+          <Markdown style={markdownStyles} rules={markdownRules}>
+            {doc.content}
+          </Markdown>
+        </View>
 
         <View style={styles.footerSpacer} />
       </ScrollView>
