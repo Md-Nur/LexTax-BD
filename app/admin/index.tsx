@@ -1,9 +1,9 @@
-import { View, Text, FlatList, TouchableOpacity, Alert, ActivityIndicator, RefreshControl, StyleSheet } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, Alert, ActivityIndicator, RefreshControl, StyleSheet, TextInput, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Users, FileText, Shield, ShieldOff, Pencil, Trash2, Plus, ArrowLeft } from 'lucide-react-native';
+import { Users, FileText, Shield, ShieldOff, Pencil, Trash2, Plus, ArrowLeft, Search, X } from 'lucide-react-native';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../src/lib/supabase';
 import { useAuth } from '../../src/context/AuthContext';
@@ -21,6 +21,12 @@ export default function AdminPanel() {
   const [documents, setDocuments] = useState<LegalDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
+  // Search and Filter State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
+  const [selectedType, setSelectedType] = useState<string | null>(null);
+  const [selectedYear, setSelectedYear] = useState<number | null>(null);
 
   useEffect(() => {
     if (!isAdmin) {
@@ -53,6 +59,27 @@ export default function AdminPanel() {
       .select('*')
       .order('updated_at', { ascending: false });
     if (!error && data) setDocuments(data as LegalDocument[]);
+  };
+
+  const filteredDocuments = useMemo(() => {
+    return documents.filter(doc => {
+      const matchesSearch = doc.title.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesBranch = !selectedBranch || doc.branch === selectedBranch;
+      const matchesType = !selectedType || doc.type === selectedType;
+      const matchesYear = !selectedYear || doc.year === selectedYear;
+      return matchesSearch && matchesBranch && matchesType && matchesYear;
+    });
+  }, [documents, searchQuery, selectedBranch, selectedType, selectedYear]);
+
+  const uniqueBranches = useMemo(() => Array.from(new Set(documents.map(d => d.branch))).sort(), [documents]);
+  const uniqueTypes = useMemo(() => Array.from(new Set(documents.map(d => d.type))).sort(), [documents]);
+  const uniqueYears = useMemo(() => Array.from(new Set(documents.map(d => d.year))).sort((a, b) => b - a), [documents]);
+
+  const clearFilters = () => {
+    setSearchQuery('');
+    setSelectedBranch(null);
+    setSelectedType(null);
+    setSelectedYear(null);
   };
 
   const toggleRole = async (user: Profile) => {
@@ -267,15 +294,88 @@ export default function AdminPanel() {
             <Plus size={28} color={theme.colors.primaryDark} />
           </TouchableOpacity>
 
+          <View style={styles.filterContainer}>
+            <View style={styles.searchBar}>
+              <Search size={20} color={theme.colors.gray400} />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search documents..."
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                placeholderTextColor={theme.colors.gray400}
+              />
+              {searchQuery.length > 0 && (
+                <TouchableOpacity onPress={() => setSearchQuery('')}>
+                  <X size={20} color={theme.colors.gray400} />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
+              <TouchableOpacity
+                onPress={clearFilters}
+                style={[styles.filterChip, (!selectedBranch && !selectedType && !selectedYear && !searchQuery) && styles.activeFilterChip]}
+              >
+                <Text style={[styles.filterChipText, (!selectedBranch && !selectedType && !selectedYear && !searchQuery) && styles.activeFilterChipText]}>
+                  All
+                </Text>
+              </TouchableOpacity>
+
+              {/* Branch Filters */}
+              {uniqueBranches.map(branch => (
+                <TouchableOpacity
+                  key={`branch-${branch}`}
+                  onPress={() => setSelectedBranch(selectedBranch === branch ? null : branch)}
+                  style={[styles.filterChip, selectedBranch === branch && styles.activeFilterChip]}
+                >
+                  <Text style={[styles.filterChipText, selectedBranch === branch && styles.activeFilterChipText]}>
+                    {branch}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+
+              {/* Type Filters */}
+              {uniqueTypes.map(type => (
+                <TouchableOpacity
+                  key={`type-${type}`}
+                  onPress={() => setSelectedType(selectedType === type ? null : type)}
+                  style={[styles.filterChip, selectedType === type && styles.activeFilterChip]}
+                >
+                  <Text style={[styles.filterChipText, selectedType === type && styles.activeFilterChipText]}>
+                    {type}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+
+              {/* Year Filters */}
+              {uniqueYears.map(year => (
+                <TouchableOpacity
+                  key={`year-${year}`}
+                  onPress={() => setSelectedYear(selectedYear === year ? null : year)}
+                  style={[styles.filterChip, selectedYear === year && styles.activeFilterChip]}
+                >
+                  <Text style={[styles.filterChipText, selectedYear === year && styles.activeFilterChipText]}>
+                    {year}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+
           <FlatList
-            data={documents}
+            data={filteredDocuments}
             renderItem={renderDocItem}
             keyExtractor={(item) => item.id}
             contentContainerStyle={[styles.listContainer, { paddingBottom: 80 }]}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />}
             ListEmptyComponent={
               <View style={styles.emptyState}>
-                <Text style={styles.emptyText}>No documents found</Text>
+                <Text style={styles.emptyText}>{searchQuery || selectedBranch || selectedType || selectedYear ? 'No matching documents found' : 'No documents found'}</Text>
+                {(searchQuery || selectedBranch || selectedType || selectedYear) && (
+                  <TouchableOpacity onPress={clearFilters} style={styles.clearButton}>
+                    <Text style={styles.clearButtonText}>Clear All Filters</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             }
           />
@@ -500,5 +600,64 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 8,
+  },
+  filterContainer: {
+    backgroundColor: theme.colors.white,
+    paddingBottom: theme.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.gray200,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.gray100,
+    marginHorizontal: theme.spacing.lg,
+    marginTop: theme.spacing.md,
+    paddingHorizontal: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
+    height: 44,
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: theme.spacing.sm,
+    color: theme.colors.gray900,
+    fontSize: 14,
+  },
+  filterScroll: {
+    marginTop: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+  },
+  filterChip: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: 6,
+    borderRadius: theme.borderRadius.full,
+    backgroundColor: theme.colors.gray100,
+    marginRight: theme.spacing.sm,
+    borderWidth: 1,
+    borderColor: theme.colors.gray200,
+  },
+  activeFilterChip: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+  },
+  filterChipText: {
+    fontSize: 12,
+    color: theme.colors.gray600,
+    fontWeight: '500',
+  },
+  activeFilterChipText: {
+    color: theme.colors.white,
+  },
+  clearButton: {
+    marginTop: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.borderRadius.md,
+    backgroundColor: theme.colors.gray100,
+  },
+  clearButtonText: {
+    color: theme.colors.primary,
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
