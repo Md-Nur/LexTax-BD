@@ -6,6 +6,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Save, ArrowLeft, ChevronDown } from 'lucide-react-native';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../src/lib/supabase';
+import { useTheme } from '../../src/context/ThemeContext';
 import { Branch, DocType, LegalDocument } from '../../src/types';
 import { theme } from '../../src/theme';
 
@@ -13,6 +14,7 @@ const BRANCHES: Branch[] = ['Income Tax', 'VAT', 'Customs'];
 const DOC_TYPES: DocType[] = ['ACT', 'SRO', 'GO', 'SO', 'Circular'];
 
 export default function DocumentFormScreen() {
+  const { colors, isDarkMode } = useTheme();
   const queryClient = useQueryClient();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id?: string }>();
@@ -100,10 +102,12 @@ export default function DocumentFormScreen() {
     }
   };
 
+  const styles = getStyles(colors, isDarkMode);
+
   if (fetching) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -123,7 +127,7 @@ export default function DocumentFormScreen() {
         <View style={styles.header}>
           <View style={styles.headerTitleRow}>
             <TouchableOpacity onPress={() => router.back()} style={styles.headerBackButton}>
-              <ArrowLeft size={24} color={theme.colors.white} />
+              <ArrowLeft size={24} color={colors.headerText} />
             </TouchableOpacity>
             <Text style={styles.headerTitleText}>
               {isEditing ? 'Edit Document' : 'New Document'}
@@ -135,10 +139,10 @@ export default function DocumentFormScreen() {
             style={styles.saveButton}
           >
             {loading ? (
-              <ActivityIndicator size="small" color={theme.colors.primaryDark} />
+              <ActivityIndicator size="small" color="#064e3b" />
             ) : (
               <>
-                <Save size={18} color={theme.colors.primaryDark} />
+                <Save size={18} color="#064e3b" />
                 <Text style={styles.saveButtonText}>Save</Text>
               </>
             )}
@@ -159,7 +163,7 @@ export default function DocumentFormScreen() {
             value={title}
             onChangeText={setTitle}
             multiline
-            placeholderTextColor={theme.colors.gray400}
+            placeholderTextColor={colors.textTertiary}
           />
 
           {/* Branch Selector */}
@@ -169,7 +173,7 @@ export default function DocumentFormScreen() {
             style={styles.selector}
           >
             <Text style={styles.selectorText}>{branch}</Text>
-            <ChevronDown size={18} color={theme.colors.gray500} />
+            <ChevronDown size={18} color={colors.textSecondary} />
           </TouchableOpacity>
           {showBranch && (
             <View style={styles.dropdown}>
@@ -194,7 +198,7 @@ export default function DocumentFormScreen() {
             style={styles.selector}
           >
             <Text style={styles.selectorText}>{type}</Text>
-            <ChevronDown size={18} color={theme.colors.gray500} />
+            <ChevronDown size={18} color={colors.textSecondary} />
           </TouchableOpacity>
           {showType && (
             <View style={styles.dropdown}>
@@ -220,7 +224,7 @@ export default function DocumentFormScreen() {
             value={year}
             onChangeText={setYear}
             keyboardType="number-pad"
-            placeholderTextColor={theme.colors.gray400}
+            placeholderTextColor={colors.textTertiary}
           />
 
           {/* Section Reference */}
@@ -230,7 +234,7 @@ export default function DocumentFormScreen() {
             placeholder="e.g. Section 2(46)"
             value={sectionRef}
             onChangeText={setSectionRef}
-            placeholderTextColor={theme.colors.gray400}
+            placeholderTextColor={colors.textTertiary}
           />
 
           {/* Effective Date */}
@@ -240,7 +244,7 @@ export default function DocumentFormScreen() {
             placeholder="YYYY-MM-DD"
             value={effectiveDate}
             onChangeText={setEffectiveDate}
-            placeholderTextColor={theme.colors.gray400}
+            placeholderTextColor={colors.textTertiary}
           />
 
           {/* Content */}
@@ -253,7 +257,7 @@ export default function DocumentFormScreen() {
             multiline
             numberOfLines={12}
             textAlignVertical="top"
-            placeholderTextColor={theme.colors.gray400}
+            placeholderTextColor={colors.textTertiary}
           />
 
           <View style={styles.footerSpacer} />
@@ -264,19 +268,19 @@ export default function DocumentFormScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.gray50,
+    backgroundColor: colors.background,
   },
   loadingContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: theme.colors.gray50,
+    backgroundColor: colors.background,
   },
   headerWrapper: {
-    backgroundColor: theme.colors.primary,
+    backgroundColor: colors.headerBg,
   },
   header: {
     paddingHorizontal: theme.spacing.lg,
@@ -293,14 +297,14 @@ const styles = StyleSheet.create({
     marginRight: theme.spacing.md,
   },
   headerTitleText: {
-    color: theme.colors.white,
+    color: colors.headerText,
     fontSize: 18,
     fontWeight: 'bold',
     lineHeight: 26,
     paddingVertical: 2,
   },
   saveButton: {
-    backgroundColor: theme.colors.accent,
+    backgroundColor: colors.accent,
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.sm,
     borderRadius: theme.borderRadius.md,
@@ -308,7 +312,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   saveButtonText: {
-    color: theme.colors.primaryDark,
+    color: '#064e3b',
     fontWeight: 'bold',
     marginLeft: 6,
     fontSize: 14,
@@ -323,20 +327,20 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
   },
   label: {
-    color: theme.colors.gray700,
+    color: colors.textSecondary,
     fontWeight: '600',
     fontSize: 14,
     lineHeight: 20,
     marginBottom: 6,
   },
   input: {
-    backgroundColor: theme.colors.white,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: theme.colors.gray200,
+    borderColor: colors.border,
     borderRadius: theme.borderRadius.lg,
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.md,
-    color: theme.colors.gray900,
+    color: colors.text,
     fontSize: 16,
     lineHeight: 24,
     marginBottom: theme.spacing.lg,
@@ -349,9 +353,9 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.xl,
   },
   selector: {
-    backgroundColor: theme.colors.white,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: theme.colors.gray200,
+    borderColor: colors.border,
     borderRadius: theme.borderRadius.lg,
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.md,
@@ -361,15 +365,15 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.lg,
   },
   selectorText: {
-    color: theme.colors.gray900,
+    color: colors.text,
     fontSize: 16,
     lineHeight: 24,
     paddingVertical: 2,
   },
   dropdown: {
-    backgroundColor: theme.colors.white,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: theme.colors.gray200,
+    borderColor: colors.border,
     borderRadius: theme.borderRadius.lg,
     marginBottom: theme.spacing.lg,
     overflow: 'hidden',
@@ -378,19 +382,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.gray100,
+    borderBottomColor: colors.borderLight,
   },
   dropdownItemActive: {
-    backgroundColor: theme.colors.primaryLight,
+    backgroundColor: colors.primaryLight,
   },
   dropdownItemText: {
     fontSize: 16,
     lineHeight: 24,
-    color: theme.colors.gray700,
+    color: colors.textSecondary,
     paddingVertical: 2,
   },
   dropdownItemTextActive: {
-    color: theme.colors.primary,
+    color: colors.primary,
     fontWeight: 'bold',
   },
   footerSpacer: {
