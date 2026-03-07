@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Session } from '@supabase/supabase-js';
+import { Session, AuthChangeEvent } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { Profile } from '../types';
 
@@ -30,6 +30,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = async (userId: string) => {
+    if (!supabase) return;
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
@@ -48,8 +49,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
       setSession(session);
       if (session?.user?.id) {
         fetchProfile(session.user.id).finally(() => setLoading(false));
@@ -60,7 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      async (_event: AuthChangeEvent, session: Session | null) => {
         setSession(session);
         if (session?.user?.id) {
           await fetchProfile(session.user.id);
@@ -74,22 +80,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signIn = async (email: string, password: string) => {
+    if (!supabase) return { error: 'Auth service unavailable' };
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     return { error: error?.message || null };
   };
 
   const signUp = async (email: string, password: string) => {
+    if (!supabase) return { error: 'Auth service unavailable' };
     const { error } = await supabase.auth.signUp({ email, password });
     return { error: error?.message || null };
   };
 
   const signOut = async () => {
+    if (!supabase) return;
     await supabase.auth.signOut();
     setProfile(null);
     setSession(null);
   };
 
   const updateProfile = async (updates: Partial<Profile>) => {
+    if (!supabase) return { error: 'Auth service unavailable' };
     if (!session?.user?.id) return { error: 'Not authenticated' };
 
     const { error } = await supabase
