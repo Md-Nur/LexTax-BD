@@ -19,8 +19,7 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "versionCode": 3,
-      "targetSdkVersion": 35
+      "versionCode": 3
     },
     "web": {
       "output": "static",
@@ -42,7 +41,14 @@
       ],
       "@react-native-google-signin/google-signin",
       "expo-font",
-      "expo-build-properties"
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "targetSdkVersion": 35
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
