@@ -1,50 +1,42 @@
-# Welcome to your Expo app 👋
+### **Short Description (Max 80 characters)**
+Comprehensive legal reference for Bangladesh Income Tax, VAT, and Customs laws.
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+---
 
-## Get started
+### **Long Description (Max 4000 characters)**
+LexTax BD is the most comprehensive and user-friendly legal reference application designed specifically for navigating the complexities of Bangladesh’s tax landscape. Whether you are a tax professional, a business owner, or a concerned citizen, LexTax BD puts the entire library of Bangladesh Income Tax, VAT, and Customs regulations right in your pocket.
 
-1. Install dependencies
+Our mission is to democratize access to legal information, ensuring that understanding tax law in Bangladesh no longer requires expensive consultations. With an intuitive interface, multi-language support (English and Bengali), and regular updates, LexTax BD is your essential companion for legal compliance and research.
 
-   ```bash
-   npm install
-   ```
+**Key Features:**
 
-2. Start the app
+*   **Complete Legal Database:** Gain instant access to the full text of the Income Tax Act, Value Added Tax (VAT) and Supplementary Duty Act, and the Customs Act of Bangladesh.
+*   **Up-to-Date Amendments:** Stay ahead of the curve with regular updates reflecting the latest government gazettes, statutory regulatory orders (SROs), and amendments.
+*   **Powerful Search Engine:** Quickly find specific sections, rules, or keywords across our entire database with our high-speed, intelligent search feature.
+*   **Bookmarks & Organization:** Save important sections and documents for quick reference later. Organize your legal research with ease.
+*   **Dual Language Support:** Seamlessly switch between English and Bengali to view laws in the language you are most comfortable with.
+*   **Modern User Experience:** Enjoy a premium design with both Light and Dark mode options, optimized for readability during long research sessions.
+*   **Print and Share:** Easily print documents or share specific sections with colleagues and clients directly from the app.
 
-   ```bash
-   npx expo start
-   ```
+**Why LexTax BD?**
 
-In the output, you'll find options to open the app in a
+In a rapidly changing regulatory environment, having accurate information is crucial. LexTax BD removes the barrier of heavy law books and complex websites, providing a streamlined, digital-first approach to legal reference. Our content is curated and updated regularly to ensure you are always looking at the most current version of the law.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+**Who is this for?**
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+*   **Tax Practitioners & Accountants:** Enhance your research efficiency and verify sections on the go.
+*   **Business Owners & Entrepreneurs:** Understand your tax obligations and stay compliant with ease.
+*   **Law Students & Educators:** A portable, searchable library for academic research and study.
+*   **Individual Taxpayers:** Empower yourself with direct access to the laws that affect your finances.
 
-## Get a fresh project
+**Disclaimer:**
+LexTax BD provides legal documents for informational purposes only. The content within this app does not constitute legal or professional advice. While we strive for accuracy, users should always consult with a qualified legal professional or refer to the official government gazette for specific legal matters.
 
-When you're ready, run:
+---
+**What's New in Version 1.0:**
+*   Initial release with Income Tax, VAT, and Customs databases.
+*   Advanced full-text search.
+*   Bookmark functionality.
+*   Dark Mode and Language toggles.
 
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Download LexTax BD today and simplify your professional life with the best tax law reference tool in Bangladesh!
