@@ -33,10 +33,12 @@ In a rapidly changing regulatory environment, having accurate information is cru
 LexTax BD provides legal documents for informational purposes only. The content within this app does not constitute legal or professional advice. While we strive for accuracy, users should always consult with a qualified legal professional or refer to the official government gazette for specific legal matters.
 
 ---
-**What's New in Version 1.0:**
-*   Initial release with Income Tax, VAT, and Customs databases.
-*   Advanced full-text search.
-*   Bookmark functionality.
-*   Dark Mode and Language toggles.
+**What's New in Version 1.0.0 (Build 3):**
+*   **Search & Filters**: Added comprehensive search and filter functionality for legal documents in the admin panel.
+*   **Theme Support**: Fully integrated dynamic styling for seamless Light and Dark mode transitions.
+*   **Stability**: Resolved critical startup crashes and "keeps stopping" errors on Android.
+*   **UI Polish**: Fixed duplicate loading indicators and optimized animations.
+*   **Tech Stack**: Migrated to Expo public environment variables and updated target SDK to 35.
+*   **Initial Core**: Access to Income Tax, VAT, and Customs databases.
 
 Download LexTax BD today and simplify your professional life with the best tax law reference tool in Bangladesh!

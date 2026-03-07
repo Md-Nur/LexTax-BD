@@ -19,7 +19,7 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "versionCode": 3
+      "versionCode": 4
     },
     "web": {
       "output": "static",
