@@ -2,7 +2,7 @@
   "expo": {
     "name": "LexTax BD",
     "slug": "LexTax-BD",
-    "version": "1.0.1",
+    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "lextaxbd",
@@ -19,6 +19,8 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
+      "versionCode": 3,
+      "targetSdkVersion": 35
     },
     "web": {
       "output": "static",
@@ -39,7 +41,8 @@
         }
       ],
       "@react-native-google-signin/google-signin",
-      "expo-font"
+      "expo-font",
+      "expo-build-properties"
     ],
     "experiments": {
       "typedRoutes": true,
