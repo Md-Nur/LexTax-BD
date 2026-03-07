@@ -51,5 +51,14 @@
     "eslint-config-expo": "~8.0.1",
     "typescript": "~5.9.2"
   },
-  "private": true
+  "private": true,
+  "expo": {
+    "doctor": {
+      "reactNativeDirectoryCheck": {
+        "exclude": [
+          "react-native-markdown-display"
+        ]
+      }
+    }
+  }
 }
