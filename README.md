@@ -42,3 +42,44 @@ LexTax BD provides legal documents for informational purposes only. The content 
 *   **Initial Core**: Access to Income Tax, VAT, and Customs databases.
 
 Download LexTax BD today and simplify your professional life with the best tax law reference tool in Bangladesh!
+
+---
+
+## 🛠 Technical Overview
+
+This mobile application is built using a modern, performant cross-platform stack:
+
+*   **Framework:** [React Native](https://reactnative.dev/) powered by [Expo](https://expo.dev/) (SDK 52)
+*   **Routing:** [Expo Router](https://docs.expo.dev/router/introduction/) for file-based navigation
+*   **Backend & Database:** [Supabase](https://supabase.com/) for authentication, database, and storage
+*   **State Management:** [TanStack React Query](https://tanstack.com/query/latest) for efficient data fetching and caching
+*   **UI & Icons:** Custom React Native components with Lucide React Native icons and Reanimated for smooth transitions
+*   **Types:** Fully strongly-typed with TypeScript
+
+### 🚀 Getting Started Locally
+
+1. **Clone the repository and install dependencies:**
+   We recommend using `bun` or `npm`:
+   ```bash
+   bun install
+   # or
+   npm install
+   ```
+
+2. **Environment Variables:**
+   Copy `.env.example` to `.env` and fill in your Supabase credentials:
+   ```bash
+   cp .env.example .env
+   ```
+
+3. **Start the Development Server:**
+   ```bash
+   npx expo start
+   ```
+   Press `i` to open in an iOS Simulator, `a` to open in an Android Emulator, or scan the QR code with the Expo Go app on your physical device.
+
+### 📦 Building for Production
+
+To build a standalone Android application (`.aab` or `.apk`) or an iOS app (`.ipa`), this project is configured for **EAS Build**.
+
+Please refer to the detailed [Build Instructions (`build_instructions.md`)](./build_instructions.md) for step-by-step guidance on how to generate the release binaries locally or through Expo Application Services.

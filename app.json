@@ -19,7 +19,7 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "versionCode": 6
+      "versionCode": 7
     },
     "web": {
       "output": "static",
@@ -47,10 +47,16 @@
           "android": {
             "targetSdkVersion": 35,
             "enableProguardInReleaseBuild": true,
-            "enableShrinkResourcesInReleaseBuild": true
+            "enableShrinkResourcesInReleaseBuild": true,
+            "extraProjectAppIncludes": [],
+            "extraAppBuildExtensions": [],
+            "gradleProperties": {
+              "org.gradle.jvmargs": "-Xmx4096m -XX:MaxMetaspaceSize=1024m"
+            }
           }
         }
-      ]
+      ],
+      "./disable-lint.js"
     ],
     "experiments": {
       "typedRoutes": true,
