@@ -23,7 +23,10 @@
       "env": {
         "NODE_ENV": "production",
         "ANDROID_HOME": "/opt/homebrew/share/android-commandlinetools",
-        "JAVA_HOME": "/opt/homebrew/Cellar/openjdk@17/17.0.18/libexec/openjdk.jdk/Contents/Home"
+        "JAVA_HOME": "/opt/homebrew/Cellar/openjdk@17/17.0.18/libexec/openjdk.jdk/Contents/Home",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://kelelrinkpozkwzmfipq.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_ByYIOye-r8Gpq-640u5u5Q_Slh-BUSZ",
+        "EXPO_PUBLIC_IMGBB_API_KEY": "2754680d1c5abe25d69aaf506ac7261a"
       }
     }
   },
