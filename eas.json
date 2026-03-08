@@ -19,6 +19,11 @@
     "production": {
       "android": {
         "buildType": "app-bundle"
+      },
+      "env": {
+        "NODE_ENV": "production",
+        "ANDROID_HOME": "/opt/homebrew/share/android-commandlinetools",
+        "JAVA_HOME": "/opt/homebrew/Cellar/openjdk@17/17.0.18/libexec/openjdk.jdk/Contents/Home"
       }
     }
   },
