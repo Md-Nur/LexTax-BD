@@ -3,11 +3,13 @@ import { Landmark, ReceiptText, ShieldCheck, User, Bookmark } from 'lucide-react
 import { TouchableOpacity } from 'react-native';
 import { useAuth } from '../../src/context/AuthContext';
 import { useTheme } from '../../src/context/ThemeContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
   const { loading } = useAuth();
   const { colors } = useTheme();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   if (loading) {
     return null;
@@ -24,8 +26,8 @@ export default function TabLayout() {
         headerTintColor: colors.headerText,
         tabBarStyle: {
           borderTopColor: colors.border,
-          height: 60,
-          paddingBottom: 8,
+          height: 60 + insets.bottom,
+          paddingBottom: 8 + insets.bottom,
           backgroundColor: colors.tabBarBg,
         },
         headerTitleStyle: {
