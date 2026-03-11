@@ -44,7 +44,7 @@ export const LegalScreen = ({ branch }: LegalScreenProps) => {
   
   const selectedTypes = useMemo(() => DOC_TYPE_MAPPING[activeCategory], [activeCategory]);
   
-  const { data, isLoading, refetch } = useTaxDocs(branch, selectedTypes, searchQuery);
+  const { data, isLoading, isRefetching, refetch } = useTaxDocs(branch, selectedTypes, searchQuery);
 
   const styles = useMemo(() => createStyles(colors), [colors]);
 
@@ -119,7 +119,7 @@ export const LegalScreen = ({ branch }: LegalScreenProps) => {
           ) : null
         }
         refreshControl={
-          <RefreshControl refreshing={isLoading} onRefresh={refetch} tintColor={colors.primary} />
+          <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.primary} />
         }
       />
 
