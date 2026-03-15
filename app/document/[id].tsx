@@ -8,6 +8,7 @@ import {
   Alert,
   StyleSheet,
   Modal,
+  Platform,
 } from "react-native";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
@@ -26,8 +27,22 @@ import { useState, useEffect, useRef } from "react";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../../src/context/ThemeContext";
+import { 
+  BannerAd, 
+  BannerAdSize, 
+  TestIds, 
+  InterstitialAd, 
+  AdEventType,
+  useInterstitialAd
+} from 'react-native-google-mobile-ads';
+import AdBanner from "../../src/components/AdBanner";
 
 const BOOKMARKS_KEY = "lextax_bookmarks";
+
+const interstitialUnitId = Platform.select({
+  android: TestIds.INTERSTITIAL,
+  ios: TestIds.INTERSTITIAL,
+}) || TestIds.INTERSTITIAL;
 
 export default function DocumentDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -35,6 +50,20 @@ export default function DocumentDetailScreen() {
 
   const { isDarkMode, colors } = useTheme();
   const [isBookmarked, setIsBookmarked] = useState(false);
+
+  const { isLoaded, isClosed, load, show } = useInterstitialAd(interstitialUnitId, {
+    requestNonPersonalizedAdsOnly: true,
+  });
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  useEffect(() => {
+    if (isLoaded) {
+      show();
+    }
+  }, [isLoaded]);
 
   // TOC State
   const [toc, setToc] = useState<{ id: string; text: string; level: number }[]>(
@@ -339,6 +368,7 @@ export default function DocumentDetailScreen() {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
       >
+        <AdBanner />
         <View style={styles.docHeader}>
           <Text style={styles.docMeta}>
             {doc.branch} • {doc.type}

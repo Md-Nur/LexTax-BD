@@ -7,6 +7,8 @@ import { useTaxDocs } from '../hooks/useTaxDocs';
 import { Branch, DOC_TYPE_MAPPING, HierarchyCategory } from '../types';
 import { useTheme } from '../context/ThemeContext';
 
+import AdBanner from './AdBanner';
+
 interface LegalScreenProps {
   branch: Branch;
 }
@@ -97,6 +99,9 @@ export const LegalScreen = ({ branch }: LegalScreenProps) => {
           </TouchableOpacity>
         ))}
       </View>
+
+      {/* Banner Ad */}
+      <AdBanner />
 
       {/* List */}
       <FlatList
