@@ -1,0 +1,12 @@
+diff --git a/node_modules/@react-native-async-storage/async-storage/android/src/main/java/com/reactnativecommunity/asyncstorage/AsyncStorageModule.java b/node_modules/@react-native-async-storage/async-storage/android/src/main/java/com/reactnativecommunity/asyncstorage/AsyncStorageModule.java
+index 3e40248..b36a7d0 100644
+--- a/node_modules/@react-native-async-storage/async-storage/android/src/main/java/com/reactnativecommunity/asyncstorage/AsyncStorageModule.java
++++ b/node_modules/@react-native-async-storage/async-storage/android/src/main/java/com/reactnativecommunity/asyncstorage/AsyncStorageModule.java
+@@ -80,7 +80,6 @@ public final class AsyncStorageModule
+     mShuttingDown = false;
+   }
+ 
+-  @Override
+   public void onCatalystInstanceDestroy() {
+     mShuttingDown = true;
+   }
